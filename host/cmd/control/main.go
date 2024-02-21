@@ -6,6 +6,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"io"
 	"os"
 
 	"github.com/signalapp/svr2/web/client"
@@ -46,3 +47,34 @@ func main() {
 	}
 	fmt.Fprintln(os.Stderr, "successfully executed control request")
 	fmt.Println(protojson.Format(resp))
+}
+
+func requestBody(filename string) ([]byte, error) {
+	file, err := os.Open(filename)
+	if err != nil {
+		return nil, fmt.Errorf("failed to open file: %v", err)
+	}
+	defer file.Close() // Defer the closure of the file here
+
+	bs, err := io.ReadAll(file)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read file: %v", err)
+	}
+
+	request := pb.HostToEnclaveRequest{}
+	if *binary {
+		err = proto.Unmarshal(bs, &request)
+	} else {
+		err = protojson.Unmarshal(bs, &request)
+	}
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse proto : %v", err)
+	}
+	if !*binary {
+		return bs, nil
+	}
+	if bs, err = protojson.Marshal(&request); err != nil {
+		return nil, fmt.Errorf("failed to marshal proto : %v", err)
+	}
+	return bs, nil
+}
