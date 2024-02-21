@@ -34,40 +34,15 @@ func main() {
 
 	bs, err := requestBody(flag.Args()[0])
 	if err != nil {
-		fmt.Fprint(os.Stderr, err)
+		fmt.Fprint(os.Stderr, "%v\n", err)
 		os.Exit(1)
 	}
 
 	cc := client.ControlClient{Addr: *addr}
 	resp, err := cc.DoJSON(bs)
 	if err != nil {
-		fmt.Fprint(os.Stderr, err)
+		fmt.Fprint(os.Stderr, "%v\n", err)
 		os.Exit(1)
 	}
 	fmt.Fprintln(os.Stderr, "successfully executed control request")
 	fmt.Println(protojson.Format(resp))
-}
-
-func requestBody(filename string) ([]byte, error) {
-	bs, err := os.ReadFile(filename)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read file : %v", err)
-	}
-
-	request := pb.HostToEnclaveRequest{}
-	if *binary {
-		err = proto.Unmarshal(bs, &request)
-	} else {
-		err = protojson.Unmarshal(bs, &request)
-	}
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse proto : %v", err)
-	}
-	if !*binary {
-		return bs, nil
-	}
-	if bs, err = protojson.Marshal(&request); err != nil {
-		return nil, fmt.Errorf("failed to marshal proto : %v", err)
-	}
-	return bs, nil
-}

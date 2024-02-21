@@ -19,6 +19,7 @@
 #include "util/log.h"
 #include "util/hex.h"
 #include "attestation/nitro/nitro.h"
+#include <cstdint>
 
 namespace svr2::attestation::nitro {
 
